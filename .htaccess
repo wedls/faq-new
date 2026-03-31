@@ -1,0 +1,15 @@
+# Запрещаем доступ к папке results
+#RedirectMatch 403 ^.*/results/.*$
+
+# Включаем перенаправление на index.php для чистых URL
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php [L,QSA]
+
+# Защита от некоторых атак
+Options -Indexes
+ServerSignature Off
+
+# Устанавливаем кодировку
+AddDefaultCharset UTF-8

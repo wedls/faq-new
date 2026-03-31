@@ -1,0 +1,12 @@
+/vendor
+/results
+/img
+/icon
+
+/.fleet
+/.idea
+/.vscode
+
+# Добавленные файлы
+задание.php
+доступы.php

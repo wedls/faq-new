@@ -1,0 +1,301 @@
+/* Адаптивность для хедера */
+@media (max-width: 1100px) {
+    .hide-mobile {
+        display: none;
+    }
+    .hide-desktop {
+        display: block !important;
+    }
+
+    .header {
+        flex-direction: column;
+        text-align: left;
+        min-height: auto;
+        height: auto !important;
+        padding: 40px 20px 20px 20px;
+        position: relative;
+        border-radius: 0 0 15px 15px;
+    }
+    .header .logo {
+        min-width: auto;
+    }    
+    .logo-text {
+        font-size: 16px;
+    }
+    .header h1 {
+        font-size: 24px;
+    }    
+    .header .subtitle {
+        max-width: 100%;
+        font-size: 14px;
+    }    
+    .header-logo-section {
+        flex-direction: column;
+        width: 100%;
+    }    
+    .header-main-image {
+        margin-left: 0;
+        margin-top: 15px;
+        height: auto;
+    }    
+    .main-img {
+        width: 100%;
+        max-width: 340px;
+        height: auto;
+    }
+    .logo-item {
+        margin-top: 20px;
+    }
+    .position-logo-mob {
+        position: absolute;
+        bottom: 5%;
+        right: 8%;
+    }
+
+    .module-content-b-i{
+        padding: 9px 13px 2px;
+    }
+    .module-content-b-i svg {
+        width: 24px;
+        height: 22.5px;
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 0px;
+    }
+
+    /* Горизонтальная прокрутка для модулей без полосы прокрутки */
+    .module-nav {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        /* Скрываем скроллбар для разных браузеров */
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* IE and Edge */
+        padding: 20px;
+        gap: 12px;
+        margin-bottom: 20px;
+        white-space: nowrap;
+    }
+
+    /* Скрываем скроллбар для Chrome/Safari/Opera */
+    .module-nav::-webkit-scrollbar {
+        display: none;
+        width: 0;
+        height: 0;
+    }
+
+    /* Стили для кнопок модулей в режиме прокрутки */
+    .module-btn {
+        flex: 0 0 auto;
+        width: 280px;
+        min-width: 280px;
+        padding: 16px 20px;
+        margin: 0;
+        position: relative;
+        border: 2px solid transparent;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+
+    .module-btn span {
+        max-width: 224px;
+        margin: 25px 0 0 0;
+        font-size: 16px;
+        line-height: 1.4;
+        white-space: normal;
+    }
+
+    .module-btn small {
+        font-size: 13px;
+        white-space: normal;
+    }
+
+    .module-progress {
+        top: 8px;
+        right: 8px;
+        padding: 3px 8px;
+        font-size: 11px;
+    }
+
+    .icon-b {
+        height: 32px;
+        width: 38px;
+    }
+
+    .icon-b svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .logo-item {
+        display: flex;
+        align-items: center;
+    }
+    
+    .module-container {
+        padding: 0px;
+    }
+    
+    .question-container {
+        padding: 15px;
+    }
+    
+    .options-container {
+        grid-template-columns: 1fr;
+    }
+    .cont-question {
+        margin: 40px 0 30px 0;
+    }
+    .option-btn {
+        font-size: 13px;
+        padding: 10px;
+    }
+
+    .module-title {
+        padding: 20px;
+        align-items: flex-start;
+    }
+    .module-content-b-t-d {
+        font-size: 20px;
+        max-width: 266px;
+    }
+    .instructions {
+        margin: 20px;
+    }
+
+    .question-text {
+        font-size: 16px;
+    }
+    .navigation-buttons {
+        flex-direction: column;
+        gap: 15px;
+        padding: 20px;
+    }
+    
+    .nav-left, .nav-right {
+        width: 100%;
+    }
+    .nav-left {
+        order: 2;
+    }
+    .nav-right {
+        order: 1;
+    }
+
+    .pagination {
+        justify-content: center;
+    }
+    
+    .nav-btn {
+        width: 100%;
+        min-width: auto !important;
+    }
+    
+    .modal-content {
+        width: 95%;
+        margin: 10% auto;
+    }
+    
+    .modal-footer {
+        flex-direction: column;
+    }
+    
+    .action-btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .progress-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .page-indicator {
+        text-align: left;
+    }
+    
+    .progress-percent {
+        font-size: 14px;
+        padding: 3px 14px;
+        border-radius: 24px;
+    }
+
+    .option-btn {
+        padding: 12px 15px;
+        gap: 12px;
+        font-size: 14px;
+    }
+    
+    .option-btn::before {
+        width: 16px;
+        height: 16px;
+    }
+    
+    .option-btn.selected::after {
+        left: 20px;
+        width: 10px;
+        height: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    /* Корректировка ширины кнопок модулей для очень маленьких экранов */
+    .module-btn {
+        width: 260px;
+        min-width: 260px;
+        padding: 14px 16px;
+    }
+
+    .module-btn span {
+        font-size: 15px;
+        margin-top: 20px;
+    }
+
+    .option-text {
+        font-size: 14px;
+    }
+    .question-number {
+        width: 35px;
+        height: 35px;
+        font-size: 1em;
+    }
+    
+    .module-title {
+        font-size: 1.5em;
+    }
+    
+    .pagination-item {
+        width: 35px;
+        height: 35px;
+        font-size: 13px;
+    }
+    
+    .pagination {
+        gap: 5px;
+    }
+
+    .option-btn {
+        padding: 10px 12px;
+        gap: 10px;
+        font-size: 13px;
+    }
+    
+    .option-btn::before {
+        width: 14px;
+        height: 14px;
+    }
+    
+    .option-btn.selected::after {
+        left: 17px;
+        width: 8px;
+        height: 8px;
+    }
+}
