@@ -1,12 +1,8 @@
-/vendor
-/results
-/img
-/icon
 
-/.fleet
-/.idea
-/.vscode
+vendor/
+results/
+img/
+icon/
 
-# Добавленные файлы
 задание.php
 доступы.php
