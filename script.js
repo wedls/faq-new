@@ -849,7 +849,6 @@ class Questionnaire {
     formatModule1Results(results) {
         let html = `<div class="results-section">`;
         
-        // Шкала лжи с сырым баллом и индексом
         if (results.lie_raw_score !== undefined && results.lie_index !== undefined) {
             html += `
                 <div class="scale-result">
@@ -857,12 +856,11 @@ class Questionnaire {
                     <p><strong>Сырой балл:</strong> ${results.lie_raw_score}/11</p>
                     <p><strong>Индекс (L = N/11):</strong> ${results.lie_index}</p>
                     <p>${results.lie_index < 0.6 ? '✅ Результаты относительно достоверны' : '⚠️ Тенденция к искажению действительности'}</p>
-                    ${results.lie_interpretation ? `<p><em>${results.lie_interpretation}</em></p>` : ''}
+                    ${results.lie_interpretation ? `<div class="interpretation-text">${results.lie_interpretation}</div>` : ''}
                 </div>
             `;
         }
         
-        // Основные шкалы
         const scales = [
             { key: 'psychosomatic', name: 'Психосоматические риски' },
             { key: 'anxiety', name: 'Тревога' },
@@ -879,29 +877,26 @@ class Questionnaire {
             if (results[scale.key] !== undefined) {
                 const score = results[scale.key];
                 let level = '';
-                if (score >= 9) level = 'Высокий уровень';
-                else if (score >= 7) level = 'Тенденция к высокому';
-                else if (score >= 4) level = 'Средний уровень';
-                else level = 'Низкий уровень';
+                if (score >= 9) level = 'Высокий уровень выраженности';
+                else if (score >= 7) level = 'Тенденция к высокому уровню выраженности';
+                else if (score >= 4) level = 'Средний уровень выраженности';
+                else level = 'Низкий уровень выраженности';
                 
                 html += `
                     <div class="scale-result">
                         <strong>${scale.name}:</strong> ${score}/10 баллов - ${level}
-                        ${results[scale.key + '_interpretation'] ? `<p><em>${results[scale.key + '_interpretation']}</em></p>` : ''}
+                        ${results[scale.key + '_interpretation'] ? `<div class="interpretation-text">${results[scale.key + '_interpretation']}</div>` : ''}
                     </div>
                 `;
             }
         });
         
-        // Суицидальная шкала
         if (results.suicidal !== undefined) {
             const score = results.suicidal;
-            let interpretation = results.suicidal_interpretation || '';
-            
             html += `
                 <div class="scale-result suicidal">
                     <strong>Склонность к суицидальному поведению:</strong> ${score}/100 баллов
-                    <p>${interpretation}</p>
+                    ${results.suicidal_interpretation ? `<div class="interpretation-text">${results.suicidal_interpretation}</div>` : ''}
                 </div>
             `;
         }
@@ -913,7 +908,6 @@ class Questionnaire {
     formatModule2Results(results) {
         let html = `<div class="results-section">`;
         
-        // Часть 1: Индекс психического напряжения
         if (results.part1) {
             html += `<h4>Часть 1: Индекс психического напряжения (ИПН)</h4>`;
             
@@ -927,15 +921,10 @@ class Questionnaire {
             blocks.forEach(block => {
                 if (results.part1[block.key] !== undefined) {
                     const score = results.part1[block.key];
-                    let level = '';
-                    if (score <= 20) level = 'Низкий уровень';
-                    else if (score <= 40) level = 'Средний уровень';
-                    else level = 'Высокий уровень';
-                    
                     html += `
                         <div class="scale-result">
-                            <strong>${block.name}:</strong> ${score}/60 баллов - ${level}
-                            ${results.part1[block.key + '_interpretation'] ? `<p><em>${results.part1[block.key + '_interpretation']}</em></p>` : ''}
+                            <strong>${block.name}:</strong> ${score}/60 баллов
+                            ${results.part1[block.key + '_interpretation'] ? `<div class="interpretation-text">${results.part1[block.key + '_interpretation']}</div>` : ''}
                         </div>
                     `;
                 }
@@ -943,29 +932,22 @@ class Questionnaire {
             
             if (results.part1.total !== undefined) {
                 const total = results.part1.total;
-                let level = '';
-                if (total <= 80) level = 'Низкий уровень напряжения';
-                else if (total <= 160) level = 'Средний уровень напряжения';
-                else level = 'Высокий уровень напряжения';
-                
                 html += `
                     <div class="scale-result total">
-                        <strong>Общий индекс ИПН:</strong> ${total}/240 баллов - ${level}
-                        ${results.part1.total_interpretation ? `<p><em>${results.part1.total_interpretation}</em></p>` : ''}
+                        <strong>Общий индекс ИПН:</strong> ${total}/240 баллов
+                        ${results.part1.total_interpretation ? `<div class="interpretation-text">${results.part1.total_interpretation}</div>` : ''}
                     </div>
                 `;
             }
         }
         
-        // Часть 2: ПТСР
         if (results.part2 !== undefined) {
             html += `<h4>Часть 2: Оценка посттравматического стресса</h4>`;
             const score = results.part2;
-            
             html += `
                 <div class="scale-result ptsd">
                     <strong>Результат:</strong> ${score} баллов
-                    <p>${results.part2_interpretation || ''}</p>
+                    ${results.part2_interpretation ? `<div class="interpretation-text">${results.part2_interpretation}</div>` : ''}
                 </div>
             `;
         }
@@ -978,7 +960,6 @@ class Questionnaire {
         let html = `<div class="results-section">`;
         html += `<h4>Профессиональные профили и адаптивность</h4>`;
         
-        // ИСПРАВЛЕНО: Обновленный список профилей в соответствии с process_results.php
         const profiles = [
             { key: 'organizational', name: 'Организационный профиль' },
             { key: 'analytical', name: 'Аналитический профиль' },
@@ -992,31 +973,15 @@ class Questionnaire {
         profiles.forEach(profile => {
             if (results[profile.key] !== undefined) {
                 const score = results[profile.key];
-                // Определяем уровень выраженности
-                let level = '';
-                let color = '';
-                
-                if (score <= 8) {
-                    level = 'Низкая выраженность';
-                    color = '#e74c3c';
-                } else if (score <= 15) {
-                    level = 'Средняя выраженность';
-                    color = '#f39c12';
-                } else {
-                    level = 'Высокая выраженность';
-                    color = '#27ae60';
-                }
-                
                 html += `
                     <div class="scale-result">
-                        <strong>${profile.name}:</strong> 
-                        <span style="color: ${color}">${score} баллов - ${level}</span>
+                        <strong>${profile.name}:</strong> ${score} баллов
+                        ${results[profile.key + '_interpretation'] ? `<div class="interpretation-text">${results[profile.key + '_interpretation']}</div>` : ''}
                     </div>
                 `;
             }
         });
         
-        // Рекомендации
         if (results.recommendations && results.recommendations.length > 0) {
             html += `<h4>Рекомендации</h4>`;
             results.recommendations.forEach(rec => {
@@ -1027,60 +992,41 @@ class Questionnaire {
         html += `</div>`;
         return html;
     }
-    
+
     formatModule4Results(results) {
         let html = `<div class="results-section">`;
         
         const score = results.total_score || 0;
         
         html += `<h4>Результаты оценки склонности к употреблению ПАВ</h4>`;
-        html += `<div class="scale-result" style="font-size: 18px; text-align: center; margin-bottom: 20px;">
+        html += `<div class="score-highlight" style="font-size: 18px; text-align: center; margin-bottom: 20px;">
                     <strong>Общий балл: ${score} из 30</strong>
                 </div>`;
         
         if (score <= 13) {
             html += `
                 <div class="scale-result" style="border-left-color: #27ae60; background: #d4edda;">
-                    <h4 style="color: #155724; margin-bottom: 10px;">✅ Низкий风险 (${score} баллов)</h4>
-                    <p>Ваш психологический профиль свидетельствует о гармоничном состоянии. Риск формирования зависимого поведения минимален, что говорит о развитых навыках самоконтроля и осознанности. Вы не испытываете навязчивого влечения к каким-либо веществам или активностям, а ваши решения носят взвешенный характер.</p>
-                    <p>Вы демонстрируете высокий уровень удовлетворенности жизнью и успешную социальную адаптацию. Эта устойчивость служит надежным внутренним ресурсом, который защищает вас от потенциальных рисков.</p>
-                    <p><strong>Рекомендация:</strong> Продолжайте поддерживать этот баланс через практики саморефлексии, здоровый образ жизни и развитие имеющихся сильных сторон личности. В этом вам может помочь опытный психолог или психотерапевт.</p>
+                    <h4 style="color: #155724; margin-bottom: 10px;">✅ Низкий риск (${score} баллов)</h4>
+                    ${results.recommendation ? `<div class="interpretation-text">${results.recommendation}</div>` : ''}
                 </div>
             `;
         } else if (score <= 16) {
             html += `
                 <div class="scale-result" style="border-left-color: #f39c12; background: #fff3cd;">
                     <h4 style="color: #856404; margin-bottom: 10px;">⚠️ Умеренный риск (${score} баллов)</h4>
-                    <p>У вас умеренный риск зависимого поведения, который означает наличие предрасположенности, когда привычные модели пока не вызывают серьёзных нарушений, но несут потенциальную угрозу. Ключевая задача — профилактика, чтобы ситуация не прогрессировала.</p>
-                    <p><strong>Рекомендации:</strong></p>
-                    <ul style="margin-left: 20px;">
-                        <li>Осознанное отношение к последствиям выбора</li>
-                        <li>Развитие навыков управления стрессом без внешних стимуляторов</li>
-                        <li>Регулярная физическая активность для естественного повышения уровня эндорфинов</li>
-                        <li>Поддержка близкого круга общения</li>
-                    </ul>
-                    <p>При сохранении или прогрессировании состояния рекомендуется консультация психолога.</p>
+                    ${results.recommendation ? `<div class="interpretation-text">${results.recommendation}</div>` : ''}
                 </div>
             `;
         } else {
             html += `
                 <div class="scale-result" style="border-left-color: #e74c3c; background: #fee;">
                     <h4 style="color: #721c24; margin-bottom: 10px;">🚨 Выраженный риск (${score} баллов)</h4>
-                    <p>Набранные баллы указывают на выраженную стадию развития аддикции. Выявленные индикаторы, такие как навязчивые мысли, рост толерантности и пренебрежение обязанностями, указывают на активное формирование дезадаптивной схемы. На этом этапе критически важно провести комплексную диагностику для определения глубины вовлеченности и типа зависимости.</p>
-                    <p><strong>Важно понимать:</strong> Зависимое поведение часто маскируется под привычку или способ справиться со стрессом. Однако его отличительная черта — прогрессирующая центрация жизни вокруг объекта зависимости. На физиологическом уровне происходит перестройка системы вознаграждения мозга.</p>
-                    <p style="font-weight: bold; color: #c0392b;">Необходимо:</p>
-                    <ul style="margin-left: 20px;">
-                        <li>Комплексная диагностика для определения глубины вовлеченности и типа зависимости</li>
-                        <li>Консультация психиатра-нарколога</li>
-                        <li>Работа с клиническим психологом или психотерапевтом</li>
-                        <li>Социальная реабилитация и поддержка близких</li>
-                    </ul>
-                    <p><strong>Раннее обращение к специалистам критически важно!</strong> Признание проблемы — это первый и самый значимый шаг к возвращению контроля над собственной жизнью.</p>
+                    ${results.recommendation ? `<div class="interpretation-text">${results.recommendation}</div>` : ''}
                 </div>
             `;
         }
         
-        html += `<p  class="progress-info"  style="margin-top: 20px; font-style: italic;">После прохождения психологического тестирования рекомендуется обратиться к психологу-консультанту для обсуждения результатов и получения рекомендаций. Если результаты теста оказались противоречивыми или вызвали сомнения в достоверности интерпретаций, когда результаты не совпадают с собственными ощущениями или представлениями о себе, специалист поможет Вам выявить индивидуальные особенности, уточнить проблему и предложить меры по её решению. Совместно с психологом-консультантом Вы обсудите практические рекомендации по решению проблемы. Уточните, проясните, конкретизируете во всех существенных деталях результаты тестирования. Координаты ВИТА-КОУЧИНГ</p>`;
+        html += `<p class="progress-info" style="margin-top: 20px; font-style: italic;">После прохождения психологического тестирования рекомендуется обратиться к психологу-консультанту для обсуждения результатов и получения рекомендаций. Если результаты теста оказались противоречивыми или вызвали сомнения в достоверности интерпретаций, когда результаты не совпадают с собственными ощущениями или представлениями о себе, специалист поможет Вам выявить индивидуальные особенности, уточнить проблему и предложить меры по её решению. Совместно с психологом-консультантом Вы обсудите практические рекомендации по решению проблемы. Уточните, проясните, конкретизируете во всех существенных деталях результаты тестирования. Координаты ВИТА-КОУЧИНГ</p>`;
         
         html += `</div>`;
         return html;

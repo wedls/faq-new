@@ -1,8 +1,4 @@
 <?php
-/**
- * Скрипт для генерации PDF через dompdf
- * Требует установки dompdf: composer require dompdf/dompdf
- */
 
 include 'config.php';
 include 'questions.php';
@@ -23,20 +19,17 @@ if (!$data) {
     die('Ошибка чтения файла');
 }
 
-// Подключаем dompdf
 require_once 'vendor/autoload.php';
 
 use Dompdf\Dompdf;
 use Dompdf\Options;
 
-// Настройки
 $options = new Options();
 $options->set('defaultFont', 'DejaVu Sans');
 $options->set('isHtml5ParserEnabled', true);
 $options->set('isRemoteEnabled', true);
 $dompdf = new Dompdf($options);
 
-// Генерируем HTML
 $html = generatePDFHTML($data);
 $dompdf->loadHtml($html, 'UTF-8');
 $dompdf->setPaper('A4', 'portrait');
@@ -45,7 +38,7 @@ $dompdf->stream('results_module_' . $data['module'] . '_' . date('Ymd_His') . '.
 exit;
 
 function generatePDFHTML($data) {
-    global $module_titles, $module1_keys;
+    global $module_titles;
     
     ob_start();
     ?>
@@ -83,9 +76,6 @@ function generatePDFHTML($data) {
                 padding: 15px;
                 margin: 20px 0;
                 border-left: 4px solid #3498db;
-            }
-            .info-block p {
-                margin: 5px 0;
             }
             .results-section {
                 margin: 25px 0;
@@ -158,18 +148,19 @@ function generatePDFHTML($data) {
                 border-bottom: 1px solid #ddd;
                 vertical-align: top;
             }
-            .badge-low { color: #27ae60; font-weight: bold; }
-            .badge-mid { color: #f39c12; font-weight: bold; }
-            .badge-high { color: #e74c3c; font-weight: bold; }
             .page-break {
                 page-break-before: always;
             }
-            .answers-table {
-                margin-top: 20px;
-                font-size: 9px;
-            }
-            .answers-table th {
-                background: #3498db;
+            .interpretation-text {
+                font-style: italic;
+                color: #2c3e50;
+                background: #f8f9fa;
+                padding: 8px 12px;
+                border-radius: 6px;
+                margin-top: 8px;
+                font-size: 11px;
+                line-height: 1.5;
+                border-left: 3px solid #3498db;
             }
         </style>
     </head>
@@ -187,74 +178,67 @@ function generatePDFHTML($data) {
         </div>
         
         <?php
-        // Вывод результатов в зависимости от модуля
         if (isset($data['results'])) {
             $results = $data['results'];
             $module = $data['module'];
             
             if ($module == 1) {
-                // Модуль 1: Психоэмоциональное состояние
                 echo '<div class="results-section">';
                 echo '<h3>Результаты модуля 1: Актуальное психоэмоциональное состояние</h3>';
                 
-                // Шкала лжи
                 if (isset($results['lie_raw_score']) && isset($results['lie_index'])) {
                     echo '<div class="scale-result">';
                     echo '<strong>Шкала искренности (L)</strong><br>';
                     echo 'Сырой балл: ' . $results['lie_raw_score'] . '/11<br>';
                     echo 'Индекс (L = N/11): ' . $results['lie_index'] . '<br>';
-                    echo $results['lie_index'] < 0.6 ? '✅ Результаты относительно достоверны' : '⚠️ Тенденция к искажению действительности';
+                    echo $results['lie_index'] < 0.6 ? 'Результаты относительно достоверны' : 'Тенденция к искажению действительности в сторону самопрезентации и неадекватности ответов';
+                    if (isset($results['lie_interpretation'])) {
+                        echo '<div class="interpretation-text">' . $results['lie_interpretation'] . '</div>';
+                    }
                     echo '</div>';
                 }
                 
-                // Основные шкалы
                 $scales = [
-                    'psychosomatic' => 'Психосоматическое благополучие',
+                    'psychosomatic' => 'Психосоматические риски',
                     'anxiety' => 'Тревога',
                     'demonstrative' => 'Демонстративность',
                     'frustration' => 'Фрустрационные установки',
                     'sensitivity' => 'Сензитивность',
                     'distancing' => 'Дистанцирование',
                     'hypomania' => 'Гипомания',
-                    'extraversion' => 'Экстраверсия',
+                    'extraversion' => 'Экстраверсия-Интроверсия',
                     'emotional_intelligence' => 'Эмоциональный интеллект'
                 ];
                 
                 foreach ($scales as $key => $name) {
                     if (isset($results[$key])) {
                         $score = $results[$key];
-                        $level = '';
-                        if ($score >= 9) $level = 'Высокий уровень';
-                        elseif ($score >= 7) $level = 'Тенденция к высокому';
-                        elseif ($score >= 4) $level = 'Средний уровень';
-                        else $level = 'Низкий уровень';
+                        if ($score >= 9) $level = 'Высокий уровень выраженности';
+                        elseif ($score >= 7) $level = 'Тенденция к высокому уровню выраженности';
+                        elseif ($score >= 4) $level = 'Средний уровень выраженности';
+                        else $level = 'Низкий уровень выраженности';
                         
                         echo '<div class="scale-result">';
                         echo '<strong>' . $name . ':</strong> ' . $score . '/10 баллов - ' . $level;
+                        if (isset($results[$key . '_interpretation'])) {
+                            echo '<div class="interpretation-text">' . $results[$key . '_interpretation'] . '</div>';
+                        }
                         echo '</div>';
                     }
                 }
                 
-                // Суицидальная шкала
                 if (isset($results['suicidal'])) {
                     $score = $results['suicidal'];
-                    $interpretation = '';
-                    if ($score <= 20) $interpretation = 'Низкий уровень проявления склонности к суицидальному поведению';
-                    elseif ($score <= 40) $interpretation = 'Проявление склонности возможно при длительном стрессе и сильных эмоциональных потрясениях';
-                    elseif ($score <= 60) $interpretation = 'Проявление склонности носит ситуационный характер';
-                    elseif ($score <= 80) $interpretation = '⚠️ ГРУППА РИСКА: Высокая вероятность проявления суицидального поведения. Необходима профессиональная помощь';
-                    else $interpretation = '🚨 КРАЙНЕ ВЫСОКИЙ УРОВЕНЬ: Необходима срочная профессиональная психиатрическая помощь';
-                    
                     echo '<div class="scale-result suicidal">';
-                    echo '<strong>Склонность к суицидальному поведению:</strong> ' . $score . '/100 баллов<br>';
-                    echo $interpretation;
+                    echo '<strong>Склонность к суицидальному поведению:</strong> ' . $score . '/100 баллов';
+                    if (isset($results['suicidal_interpretation'])) {
+                        echo '<div class="interpretation-text">' . $results['suicidal_interpretation'] . '</div>';
+                    }
                     echo '</div>';
                 }
-                
                 echo '</div>';
                 
             } elseif ($module == 2) {
-                // Модуль 2: Стресс и напряжение
                 echo '<div class="results-section">';
                 echo '<h3>Результаты модуля 2: Диагностика психического напряжения и стрессовых расстройств</h3>';
                 
@@ -265,32 +249,28 @@ function generatePDFHTML($data) {
                         'emotional' => 'Эмоциональный дискомфорт',
                         'cognitive' => 'Когнитивные трудности',
                         'physical' => 'Физиологическое напряжение',
-                        'behavioral' => 'Поведенческие нарушения'
+                        'behavioral' => 'Поведенческие и социальные нарушения'
                     ];
                     
                     foreach ($blocks as $key => $name) {
                         if (isset($results['part1'][$key])) {
                             $score = $results['part1'][$key];
-                            $level = '';
-                            if ($score <= 20) $level = 'Низкий уровень';
-                            elseif ($score <= 40) $level = 'Средний уровень';
-                            else $level = 'Высокий уровень';
-                            
                             echo '<div class="scale-result">';
-                            echo '<strong>' . $name . ':</strong> ' . $score . '/60 баллов - ' . $level;
+                            echo '<strong>' . $name . ':</strong> ' . $score . '/60 баллов';
+                            if (isset($results['part1'][$key . '_interpretation'])) {
+                                echo '<div class="interpretation-text">' . $results['part1'][$key . '_interpretation'] . '</div>';
+                            }
                             echo '</div>';
                         }
                     }
                     
                     if (isset($results['part1']['total'])) {
                         $total = $results['part1']['total'];
-                        $level = '';
-                        if ($total <= 80) $level = 'Низкий уровень напряжения';
-                        elseif ($total <= 160) $level = 'Средний уровень напряжения';
-                        else $level = 'Высокий уровень напряжения';
-                        
                         echo '<div class="scale-result total">';
-                        echo '<strong>Общий индекс ИПН:</strong> ' . $total . '/240 баллов - ' . $level;
+                        echo '<strong>Общий индекс ИПН:</strong> ' . $total . '/240 баллов';
+                        if (isset($results['part1']['total_interpretation'])) {
+                            echo '<div class="interpretation-text">' . $results['part1']['total_interpretation'] . '</div>';
+                        }
                         echo '</div>';
                     }
                 }
@@ -298,26 +278,16 @@ function generatePDFHTML($data) {
                 if (isset($results['part2'])) {
                     echo '<h4>Часть 2: Оценка посттравматического стресса</h4>';
                     $score = $results['part2'];
-                    $interpretation = '';
-                    
-                    if ($score <= 96) {
-                        $interpretation = 'Адаптивный вариант поведения и деятельности';
-                    } elseif ($score >= 97 && $score <= 111) {
-                        $interpretation = 'Испытывает проблемы с адаптацией';
-                    } elseif ($score >= 112) {
-                        $interpretation = '⚠️ ВЫЯВЛЕНО ПТСР: Рекомендуется пройти курс реабилитации';
-                    }
-                    
                     echo '<div class="scale-result ptsd">';
-                    echo '<strong>Результат:</strong> ' . $score . ' баллов<br>';
-                    echo $interpretation;
+                    echo '<strong>Результат:</strong> ' . $score . ' баллов';
+                    if (isset($results['part2_interpretation'])) {
+                        echo '<div class="interpretation-text">' . $results['part2_interpretation'] . '</div>';
+                    }
                     echo '</div>';
                 }
-                
                 echo '</div>';
                 
             } elseif ($module == 3) {
-                // Модуль 3: Профориентация
                 echo '<div class="results-section">';
                 echo '<h3>Результаты модуля 3: Профориентация и адаптивность</h3>';
                 
@@ -334,23 +304,11 @@ function generatePDFHTML($data) {
                 foreach ($profiles as $key => $name) {
                     if (isset($results[$key])) {
                         $score = $results[$key];
-                        $level = '';
-                        $class = '';
-                        
-                        if ($score <= 8) {
-                            $level = 'Низкая выраженность';
-                            $class = 'badge-low';
-                        } elseif ($score <= 15) {
-                            $level = 'Средняя выраженность';
-                            $class = 'badge-mid';
-                        } else {
-                            $level = 'Высокая выраженность';
-                            $class = 'badge-high';
-                        }
-                        
                         echo '<div class="scale-result">';
-                        echo '<strong>' . $name . ':</strong> ';
-                        echo '<span class="' . $class . '">' . $score . ' баллов - ' . $level . '</span>';
+                        echo '<strong>' . $name . ':</strong> ' . $score . ' баллов';
+                        if (isset($results[$key . '_interpretation'])) {
+                            echo '<div class="interpretation-text">' . $results[$key . '_interpretation'] . '</div>';
+                        }
                         echo '</div>';
                     }
                 }
@@ -363,11 +321,9 @@ function generatePDFHTML($data) {
                     }
                     echo '</div>';
                 }
-                
                 echo '</div>';
                 
             } elseif ($module == 4) {
-                // Модуль 4: Склонность к ПАВ
                 echo '<div class="results-section">';
                 echo '<h3>Результаты модуля 4: Выявление склонности к употреблению ПАВ</h3>';
                 
@@ -398,15 +354,13 @@ function generatePDFHTML($data) {
                     echo nl2br($recommendation);
                     echo '</div>';
                 }
-                
                 echo '</div>';
             }
         }
         ?>
         
-        <!-- Ответы на вопросы -->
         <div class="page-break"></div>
-        <div class="results-section answers-table">
+        <div class="results-section">
             <h3>Ответы на вопросы</h3>
             <table>
                 <thead>
