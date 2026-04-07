@@ -477,9 +477,9 @@ function getProfileInterpretation($profile, $score) {
         ]
     ];
     
-    if ($score >= 16) {
+    if ($score >= 12) {
         $level = 'high';
-    } elseif ($score >= 9) {
+    } elseif ($score >= 8) {
         $level = 'mid';
     } else {
         $level = 'low';
