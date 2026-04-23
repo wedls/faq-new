@@ -110,23 +110,35 @@ function isModuleAccessible($module) {
 
 /**
  * Получение всех файлов результатов ТОЛЬКО для текущего survey_id
- * ИСПРАВЛЕНО: Теперь строго фильтруем по survey_id из сессии
+ * ИСПРАВЛЕНО: Более надёжный поиск файлов с проверкой содержимого
  */
 function getAllResultsForSession() {
     $results = [];
     $current_survey_id = $_SESSION['survey_id'] ?? null;
     
-    if ($current_survey_id) {
-        // Ищем файлы с точным совпадением survey_id в имени
-        $pattern = 'results/module_*_' . preg_quote($current_survey_id, '/') . '_*.json';
-        $files = glob($pattern);
+    if (!$current_survey_id) {
+        return $results;
+    }
+    
+    // Получаем ВСЕ JSON-файлы из папки results
+    $all_files = glob('results/*.json');
+    
+    foreach ($all_files as $file) {
+        // Пропускаем файлы, которые не можем прочитать
+        $content = @file_get_contents($file);
+        if ($content === false) {
+            continue;
+        }
         
-        foreach ($files as $file) {
-            $data = json_decode(file_get_contents($file), true);
-            if ($data && isset($data['survey_id']) && $data['survey_id'] === $current_survey_id) {
-                $data['filename'] = basename($file);
-                $results[] = $data;
-            }
+        $data = json_decode($content, true);
+        if (!$data || !isset($data['survey_id'])) {
+            continue;
+        }
+        
+        // Проверяем точное совпадение survey_id
+        if ($data['survey_id'] === $current_survey_id) {
+            $data['filename'] = basename($file);
+            $results[] = $data;
         }
     }
     
