@@ -72,7 +72,7 @@ $module_titles = [
 $questions_per_module = [
     1 => 136,
     2 => 95,
-    3 => 30,
+    3 => 78,
     4 => 30
 ];
 

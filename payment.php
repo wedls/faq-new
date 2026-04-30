@@ -166,7 +166,7 @@ if (isPaymentPaid()) {
                     <ul>
                         <li><i class="fas fa-brain"></i> Модуль 1: Психоэмоциональное состояние (136 вопросов)</li>
                         <li><i class="fas fa-heartbeat"></i> Модуль 2: Стресс и напряжение (95 вопросов)</li>
-                        <li><i class="fas fa-chart-line"></i> Модуль 3: Профориентация (30 вопросов)</li>
+                        <li><i class="fas fa-chart-line"></i> Модуль 3: Профориентация (78 вопросов)</li>
                         <li><i class="fas fa-exclamation-triangle"></i> Модуль 4: Склонность к ПАВ (30 вопросов)</li>
                     </ul>
                 </div>

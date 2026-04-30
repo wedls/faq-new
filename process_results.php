@@ -378,7 +378,7 @@ function calculateModule3Results($responses) {
     $results = [];
     
     $organizational_score = 0;
-    $organizational_q = [1, 9, 13, 19];
+    $organizational_q = [1, 9, 13, 19, 31, 32, 33, 34, 35, 36];
     foreach ($organizational_q as $q) {
         if (isset($responses[$q])) $organizational_score += intval($responses[$q]);
     }
@@ -386,7 +386,7 @@ function calculateModule3Results($responses) {
     $results['organizational_interpretation'] = getProfileInterpretation('organizational', $organizational_score);
 
     $analytical_score = 0;
-    $analytical_q = [2, 8, 15];
+    $analytical_q = [2, 8, 15, 37, 38, 39, 40, 41, 42, 43];
     foreach ($analytical_q as $q) {
         if (isset($responses[$q])) $analytical_score += intval($responses[$q]);
     }
@@ -394,7 +394,7 @@ function calculateModule3Results($responses) {
     $results['analytical_interpretation'] = getProfileInterpretation('analytical', $analytical_score);
 
     $creative_score = 0;
-    $creative_q = [6, 11, 16];
+    $creative_q = [6, 11, 16, 44, 45, 46, 47, 48, 49, 50];
     foreach ($creative_q as $q) {
         if (isset($responses[$q])) $creative_score += intval($responses[$q]);
     }
@@ -402,7 +402,7 @@ function calculateModule3Results($responses) {
     $results['creative_interpretation'] = getProfileInterpretation('creative', $creative_score);
 
     $communicative_score = 0;
-    $communicative_q = [5, 12, 14];
+    $communicative_q = [5, 12, 14, 51, 52, 53, 54, 55, 56, 57];
     foreach ($communicative_q as $q) {
         if (isset($responses[$q])) $communicative_score += intval($responses[$q]);
     }
@@ -410,7 +410,7 @@ function calculateModule3Results($responses) {
     $results['communicative_interpretation'] = getProfileInterpretation('communicative', $communicative_score);
 
     $scientific_score = 0;
-    $scientific_q = [22, 25];
+    $scientific_q = [22, 25, 58, 59, 60, 61, 62, 63, 64, 65];
     foreach ($scientific_q as $q) {
         if (isset($responses[$q])) $scientific_score += intval($responses[$q]);
     }
@@ -418,7 +418,7 @@ function calculateModule3Results($responses) {
     $results['scientific_interpretation'] = getProfileInterpretation('scientific', $scientific_score);
 
     $technical_score = 0;
-    $technical_q = [7, 16, 20];
+    $technical_q = [7, 16, 20, 66, 67, 68, 69, 70, 71, 72];
     foreach ($technical_q as $q) {
         if (isset($responses[$q])) $technical_score += intval($responses[$q]);
     }
@@ -426,7 +426,7 @@ function calculateModule3Results($responses) {
     $results['technical_interpretation'] = getProfileInterpretation('technical', $technical_score);
 
     $self_development_score = 0;
-    $self_development_q = [27, 30];
+    $self_development_q = [27, 30, 73, 74, 75, 76, 77, 78];
     foreach ($self_development_q as $q) {
         if (isset($responses[$q])) $self_development_score += intval($responses[$q]);
     }
@@ -477,9 +477,23 @@ function getProfileInterpretation($profile, $score) {
         ]
     ];
     
-    if ($score >= 12) {
+    $profile_max_scores = [
+        'organizational' => 55,
+        'analytical' => 45,
+        'creative' => 50,
+        'communicative' => 50,
+        'scientific' => 50,
+        'technical' => 50,
+        'self_development' => 40
+    ];
+
+    $max_score = $profile_max_scores[$profile] ?? 50;
+    $high_threshold = (int) round($max_score * 0.7);
+    $mid_threshold = (int) round($max_score * 0.4);
+
+    if ($score >= $high_threshold) {
         $level = 'high';
-    } elseif ($score >= 8) {
+    } elseif ($score >= $mid_threshold) {
         $level = 'mid';
     } else {
         $level = 'low';

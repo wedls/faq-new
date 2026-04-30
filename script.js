@@ -12,7 +12,7 @@ class Questionnaire {
         this.questionsPerModule = {
             1: 136,
             2: 95,
-            3: 30,
+            3: 78,
             4: 30
         };
         this.questionsPerPage = 10;
