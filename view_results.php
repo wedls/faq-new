@@ -6,6 +6,15 @@ include 'questions.php';
 // Теперь она возвращает только результаты текущего пользователя по survey_id
 $results = getAllResultsForSession();
 
+$scan = surveyResultsDirectoryScan($_SESSION['survey_id'] ?? null);
+logSurveyFlow('view_results_open', array_merge(
+    [
+        'results_rows_after_filter' => count($results),
+        'survey_id_empty' => empty($_SESSION['survey_id'] ?? null),
+    ],
+    $scan
+));
+
 // Сортируем по дате (новые сверху)
 usort($results, function($a, $b) {
     return strtotime($b['timestamp']) - strtotime($a['timestamp']);

@@ -41,6 +41,74 @@ if (!is_dir('results')) {
     file_put_contents('results/.htaccess', "Deny from all\n");
 }
 
+// Логирование цепочки «сохранение модуля → просмотр результатов» (отключите при необходимости)
+if (!defined('SURVEY_FLOW_LOG_ENABLED')) {
+    define('SURVEY_FLOW_LOG_ENABLED', true);
+}
+
+if (!is_dir(__DIR__ . '/logs')) {
+    @mkdir(__DIR__ . '/logs', 0777, true);
+    @file_put_contents(__DIR__ . '/logs/.htaccess', "Deny from all\n");
+}
+
+/**
+ * Одна строка JSON в logs/survey_flow.log — для разбора случаев «модуль прошёл, а в view_results пусто».
+ */
+function logSurveyFlow(string $event, array $context = []): void {
+    if (!SURVEY_FLOW_LOG_ENABLED) {
+        return;
+    }
+    $base = [
+        'ts' => date('Y-m-d H:i:s'),
+        'event' => $event,
+        'php_session_id' => session_status() === PHP_SESSION_ACTIVE ? session_id() : '',
+        'survey_id' => $_SESSION['survey_id'] ?? null,
+        'ip' => $_SERVER['REMOTE_ADDR'] ?? '',
+        'user_agent' => isset($_SERVER['HTTP_USER_AGENT']) ? substr($_SERVER['HTTP_USER_AGENT'], 0, 200) : '',
+        'request_uri' => $_SERVER['REQUEST_URI'] ?? '',
+        'referer' => isset($_SERVER['HTTP_REFERER']) ? substr($_SERVER['HTTP_REFERER'], 0, 300) : '',
+    ];
+    $line = json_encode(array_merge($base, $context), JSON_UNESCAPED_UNICODE) . "\n";
+    @file_put_contents(__DIR__ . '/logs/survey_flow.log', $line, FILE_APPEND | LOCK_EX);
+}
+
+/**
+ * Сводка по папке results (для лога при открытии view_results): сколько файлов и сколько совпало с текущим survey_id.
+ */
+function surveyResultsDirectoryScan(?string $currentSurveyId): array {
+    $out = [
+        'files_in_results' => 0,
+        'unreadable' => 0,
+        'json_invalid_or_no_survey_id' => 0,
+        'matched_current_survey' => 0,
+        'other_survey_id' => 0,
+    ];
+    $pattern = __DIR__ . DIRECTORY_SEPARATOR . 'results' . DIRECTORY_SEPARATOR . '*.json';
+    $all_files = glob($pattern) ?: [];
+    $out['files_in_results'] = count($all_files);
+    $sid = is_string($currentSurveyId) ? $currentSurveyId : '';
+
+    foreach ($all_files as $file) {
+        $content = @file_get_contents($file);
+        if ($content === false) {
+            $out['unreadable']++;
+            continue;
+        }
+        $data = json_decode($content, true);
+        if (!$data || !isset($data['survey_id'])) {
+            $out['json_invalid_or_no_survey_id']++;
+            continue;
+        }
+        if ($sid !== '' && $data['survey_id'] === $sid) {
+            $out['matched_current_survey']++;
+        } else {
+            $out['other_survey_id']++;
+        }
+    }
+
+    return $out;
+}
+
 // Инициализируем статус оплаты в сессии, если его нет
 if (!isset($_SESSION['payment_status'])) {
     $_SESSION['payment_status'] = 'pending'; // pending, paid, failed
@@ -120,8 +188,8 @@ function getAllResultsForSession() {
         return $results;
     }
     
-    // Получаем ВСЕ JSON-файлы из папки results
-    $all_files = glob('results/*.json');
+    $pattern = __DIR__ . DIRECTORY_SEPARATOR . 'results' . DIRECTORY_SEPARATOR . '*.json';
+    $all_files = glob($pattern) ?: [];
     
     foreach ($all_files as $file) {
         // Пропускаем файлы, которые не можем прочитать

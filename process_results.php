@@ -13,6 +13,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $responses = json_decode($responses_json, true);
         
         if (json_last_error() !== JSON_ERROR_NONE) {
+            logSurveyFlow('module_complete_reject', [
+                'reason' => 'json_decode_responses',
+                'json_error' => json_last_error_msg(),
+                'module' => $module,
+            ]);
             echo json_encode([
                 'success' => false, 
                 'message' => 'Ошибка декодирования JSON: ' . json_last_error_msg()
@@ -29,6 +34,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($module === 4) {
             $results = calculateModule4Results($responses);
         } else {
+            logSurveyFlow('module_complete_reject', [
+                'reason' => 'invalid_module',
+                'module' => $module,
+            ]);
             echo json_encode(['success' => false, 'message' => 'Неверный модуль']);
             exit;
         }
@@ -53,11 +62,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'ip_address' => $_SERVER['REMOTE_ADDR'] ?? 'unknown'
         ];
         
-        $filename = 'results/module_' . $module . '_' . $_SESSION['survey_id'] . '_' . date('Ymd_His') . '.json';
-        $result = file_put_contents($filename, json_encode($save_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+        $filename = __DIR__ . DIRECTORY_SEPARATOR . 'results' . DIRECTORY_SEPARATOR
+            . 'module_' . $module . '_' . $_SESSION['survey_id'] . '_' . date('Ymd_His') . '.json';
+        $payload = json_encode($save_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        $result = @file_put_contents($filename, $payload, LOCK_EX);
         
         if ($result !== false) {
             $_SESSION['responses'][$module] = [];
+            
+            logSurveyFlow('module_complete_save_ok', [
+                'module' => $module,
+                'saved_filename' => basename($filename),
+                'absolute_path' => $filename,
+                'bytes_written' => (int) $result,
+                'answered_questions' => count($clean_responses),
+                'payload_json_length' => is_string($payload) ? strlen($payload) : 0,
+            ]);
             
             echo json_encode([
                 'success' => true,
@@ -66,6 +86,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'results' => $results
             ]);
         } else {
+            logSurveyFlow('module_complete_save_fail', [
+                'module' => $module,
+                'target_filename' => basename($filename),
+                'absolute_path' => $filename,
+                'results_dir_writable' => is_writable(__DIR__ . DIRECTORY_SEPARATOR . 'results'),
+                'last_error' => error_get_last()['message'] ?? '',
+            ]);
             echo json_encode([
                 'success' => false,
                 'message' => 'Ошибка при сохранении файла'
