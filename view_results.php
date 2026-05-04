@@ -99,6 +99,9 @@ usort($results, function($a, $b) {
             text-align: center;
             border: 2px solid #eee;
         }
+        .status-card.pending:hover {
+            background: var(--secondary);
+        }
         
         a.status-card {
             display: block;
