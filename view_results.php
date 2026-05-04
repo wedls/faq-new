@@ -100,6 +100,24 @@ usort($results, function($a, $b) {
             border: 2px solid #eee;
         }
         
+        a.status-card {
+            display: block;
+            text-decoration: none;
+            color: inherit;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        a.status-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+        }
+        
+        a.status-card:focus-visible {
+            outline: 2px solid var(--secondary);
+            outline-offset: 2px;
+        }
+        
         .status-card.completed {
             border-color: var(--success);
             background: #d4edda;
@@ -291,10 +309,10 @@ usort($results, function($a, $b) {
                     <h3>Статус прохождения:</h3>
                     <div class="status-cards">
                         <?php for ($i = 1; $i <= 4; $i++): ?>
-                            <div class="status-card <?php echo $modules_completed[$i] ? 'completed' : 'pending'; ?>">
+                            <a class="status-card <?php echo $modules_completed[$i] ? 'completed' : 'pending'; ?>" href="index.php?module=<?php echo $i; ?>" title="Перейти к модулю <?php echo $i; ?> на главной странице">
                                 <h4>Модуль <?php echo $i; ?></h4>
                                 <p><?php echo $modules_completed[$i] ? '✓ Завершен' : '⏳ Не завершен'; ?></p>
-                            </div>
+                            </a>
                         <?php endfor; ?>
                     </div>
                 </div>

@@ -17,6 +17,9 @@ class Questionnaire {
         };
         this.questionsPerPage = 10;
         this.paymentStatus = 'pending'; // pending, paid
+        this.responsesFetched = false;
+        this.paymentContentReady = false;
+        this._initialModuleLoadDone = false;
         this.init();
     }
 
@@ -43,16 +46,31 @@ class Questionnaire {
                         this.showPaymentRequired();
                     } else {
                         this.paymentStatus = 'paid';
-                        // Если оплата отключена или оплачена, загружаем модуль
-                        this.loadModule(this.currentModule, this.currentPage);
+                        this.markPaymentContentReady();
                     }
                 }
             })
             .catch(error => {
                 console.error('Ошибка проверки оплаты:', error);
-                // При ошибке всё равно пробуем загрузить модуль
-                this.loadModule(this.currentModule, this.currentPage);
+                this.markPaymentContentReady();
             });
+    }
+
+    markPaymentContentReady() {
+        this.paymentContentReady = true;
+        this.tryInitialModuleLoad();
+    }
+
+    tryInitialModuleLoad() {
+        if (!this.paymentContentReady || !this.responsesFetched) return;
+        if (this._initialModuleLoadDone) return;
+        this._initialModuleLoadDone = true;
+        const raw = new URLSearchParams(window.location.search).get('module');
+        const urlMod = parseInt(raw, 10);
+        const mod = urlMod >= 1 && urlMod <= 4 ? urlMod : 1;
+        this.currentModule = mod;
+        this.currentPage = 1;
+        this.loadModule(mod, 1);
     }
 
     showPaymentRequired() {
@@ -289,6 +307,10 @@ class Questionnaire {
             })
             .catch(error => {
                 console.error('Ошибка загрузки ответов:', error);
+            })
+            .finally(() => {
+                this.responsesFetched = true;
+                this.tryInitialModuleLoad();
             });
     }
 
